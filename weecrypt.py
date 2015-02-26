@@ -4,7 +4,6 @@ import weechat
 import subprocess
 
 weechat.register ( "weecrypt", "shak-mar", "0.1", "None", "asymmetric encryption for weechat using gpg", "", "" )
-weechat.prnt ( "", "Loading weecrypt..." )
 
 channel_whitelist = [ "#yourchannel" ]
 in_stream = False
@@ -27,7 +26,7 @@ def other_nicks ( channel_name, server_name ):
     return nicks
 
 def encrypt ( message, to_nick ):
-    p = subprocess.Popen ( [ "base64" ], stdin = subprocess.PIPE, stdout = subprocess.PIPE )
+    p = subprocess.Popen ( [ "base64", "-w", "0" ], stdin = subprocess.PIPE, stdout = subprocess.PIPE )
     encoded, _ = p.communicate ( message.encode () )
     encoded = encoded.decode ().strip ()
     return encoded
