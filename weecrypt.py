@@ -53,6 +53,9 @@ def in_modifier ( data, modifier, server_name, irc_message ):
 
     parsed, message = parse_message ( irc_message, server = server_name )
 
+    if parsed [ "channel" ] not in channel_whitelist:
+        return irc_message
+
     def build_message ( message ):
         return ":" + parsed [ "host" ] + " PRIVMSG " + parsed [ "channel" ] + " :" + message
 
@@ -80,6 +83,10 @@ weechat.hook_modifier ( "irc_in2_privmsg", "in_modifier", "" )
 
 def out_modifier ( data, modifier, server_name, irc_message ):
     parsed, message = parse_message ( irc_message, server = server_name )
+
+    if parsed [ "channel" ] not in channel_whitelist:
+        return irc_message
+
     new_message = "crypt:"
     for nick in other_nicks ( parsed [ "channel" ], server_name ):
         new_message += nick + ":" + encrypt ( message, nick ) + ":"
