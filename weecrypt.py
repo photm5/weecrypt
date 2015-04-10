@@ -2,22 +2,28 @@
 
 import weechat
 import subprocess
+from os import path
+import json
 
 weechat.register("weecrypt", "shak-mar", "0.1", "None",
                  "asymmetric encryption for weechat using gpg", "", "")
 
-# Only the traffic on whitelisted channels will be en- and decrypted
-channel_whitelist = ["#yourchannel"]
-buffers = {}
-
-# GPG Identifiers for the people whose keys you own.
-# A GPG Identifier is something that is unique to the public key you wish to
-# use.
-gpg_identifiers = {
-        "nickname": "gpg_identifier"
-        }
-
+channel_whitelist = []
+gpg_identifiers = {}
 max_length = 300
+buffers = {}
+config_path = "~/.weecrypt.json"
+
+# Load the configuration
+if path.isfile(path.expanduser(config_path)):
+    with open(path.expanduser(config_path)) as f:
+        config = json.loads(f.read())
+        channel_whitelist = config["channels"]
+        gpg_identifiers = config["gpg_identifiers"]
+
+else:
+    weechat.prnt("",
+                 "Error: Cant find configuration file at: %s." % config_path)
 
 
 # Retrieve your own nick
