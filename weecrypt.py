@@ -8,8 +8,7 @@ weechat.register("weecrypt", "shak-mar", "0.1", "None",
 
 # Only the traffic on whitelisted channels will be en- and decrypted
 channel_whitelist = ["#yourchannel"]
-in_stream = False
-stream_buffer = ""
+buffers = {}
 
 # GPG Identifiers for the people whose keys you own.
 # A GPG Identifier is something that is unique to the public key you wish to
@@ -81,10 +80,10 @@ def parse_message(irc_message, server=None):
 
 # This method modifies how received IRC messages are displayed
 def in_modifier(data, modifier, server_name, irc_message):
-    global in_stream
-    global stream_buffer
+    global buffers
 
     parsed, message = parse_message(irc_message, server=server_name)
+    buffer_id = "%s-%s-%s" % (parsed["nick"], parsed["channel"], server_name)
 
     # Only decrypt on whitelisted channels
     if parsed["channel"] not in channel_whitelist:
@@ -96,27 +95,28 @@ def in_modifier(data, modifier, server_name, irc_message):
 
     # Start buffering
     if message.startswith("crypt:"):
-        in_stream = True
-        stream_buffer = ""
+        buffers[buffer_id] = ""
 
-    if in_stream:
-        stream_buffer += message
+    # Currently buffering
+    if buffer_id in buffers:
+        buffers[buffer_id] += message
 
-    # Finished buffering: decrypt the message
-    if in_stream and message.endswith(":crypt"):
-        in_stream = False
+        # Finished buffering: decrypt the message
+        if message.endswith(":crypt"):
 
-        # Turn the message into the original ASCII armor
-        split = stream_buffer.split(":")
-        message = ":".join(split[1:-1])
-        # Put the newlines back, as GPG needs them
-        message = message.replace("\\n", "\n", -1)
+            # Turn the message into the original ASCII armor
+            split = buffers[buffer_id].split(":")
+            message = ":".join(split[1:-1])
+            # Put the newlines back, as GPG needs them
+            message = message.replace("\\n", "\n", -1)
 
-        return build_message(decrypt(message))
+            del buffers[buffer_id]
 
-    # Don't print anything while buffering
-    if in_stream:
-        return ""
+            return build_message(decrypt(message))
+
+        # Don't print anything while buffering
+        else:
+            return ""
 
     return build_message(message)
 
