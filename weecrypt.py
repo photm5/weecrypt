@@ -143,7 +143,14 @@ weechat.hook_modifier("irc_in2_privmsg", "in_modifier", "")
 
 # This method modifies how IRC messages are sent
 def out_modifier(data, modifier, server_name, irc_message):
+    def build_message(message):
+        return "PRIVMSG %s :%s" % (parsed["channel"], message)
+
     parsed, message = parse_message(irc_message, server=server_name)
+
+    # Don't encrypt messages from unencrypted_cmd
+    if message.startswith("<unencrypted>: "):
+        return build_message(message[15:])
 
     # Continue only if it's an encryption target
     if not encryption_target(parsed, server_name):
@@ -162,9 +169,6 @@ def out_modifier(data, modifier, server_name, irc_message):
     # Encode the newlines, as they are not allowed by the IRC protocol
     new_message = new_message.replace("\n", "\\n", -1)
 
-    def build_message(message):
-        return "PRIVMSG %s :%s" % (parsed["channel"], message)
-
     # The message has to be split into multiple messages, as ASCII armors
     # are longer than the longest legal IRC message
     messages = []
@@ -180,3 +184,13 @@ def out_modifier(data, modifier, server_name, irc_message):
     return "\n".join(messages)
 
 weechat.hook_modifier("irc_out_privmsg", "out_modifier", "")
+
+
+# Send an unencrypted message
+def unencrypted_cmd(data, buffer, args):
+    weechat.command(buffer, "<unencrypted>: %s" % "".join(args))
+    return weechat.WEECHAT_RC_OK
+
+weechat.hook_command("unencrypted", "sends an unencrypted message",
+                     "<message>", "message: message to be sent",
+                     "", "unencrypted_cmd", "")
