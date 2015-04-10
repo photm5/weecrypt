@@ -130,7 +130,7 @@ def in_modifier(data, modifier, server_name, irc_message):
         else:
             return ""
 
-    return build_message(message)
+    return build_message("<unencrypted>: %s" % message)
 
 weechat.hook_modifier("irc_in2_privmsg", "in_modifier", "")
 
