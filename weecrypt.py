@@ -81,6 +81,15 @@ def parse_message(irc_message, server=None):
     return(parsed, message)
 
 
+# Message qualifies for en- or decryption
+def encryption_target(parsed, server_name):
+    channel = parsed["channel"]
+    return\
+        channel in channel_whitelist or\
+        channel in gpg_identifiers or\
+        (channel == my_nick(server_name) and parsed["nick"] in gpg_identifiers)
+
+
 # This method modifies how received IRC messages are displayed
 def in_modifier(data, modifier, server_name, irc_message):
     global buffers
@@ -88,8 +97,8 @@ def in_modifier(data, modifier, server_name, irc_message):
     parsed, message = parse_message(irc_message, server=server_name)
     buffer_id = "%s-%s-%s" % (parsed["nick"], parsed["channel"], server_name)
 
-    # Only decrypt on whitelisted channels
-    if parsed["channel"] not in channel_whitelist:
+    # Continue only if it's an encryption target
+    if not encryption_target(parsed, server_name):
         return irc_message
 
     def build_message(message):
@@ -130,12 +139,20 @@ weechat.hook_modifier("irc_in2_privmsg", "in_modifier", "")
 def out_modifier(data, modifier, server_name, irc_message):
     parsed, message = parse_message(irc_message, server=server_name)
 
-    # Only encrypt on whitelisted channels
-    if parsed["channel"] not in channel_whitelist:
+    # Continue only if it's an encryption target
+    if not encryption_target(parsed, server_name):
         return irc_message
 
-    receipients = other_nicks(parsed["channel"], server_name)
-    new_message = "crypt:%s:crypt" % encrypt(message, receipients)
+    new_message = ""
+    # Message sent over a channel
+    if parsed["channel"].startswith("#"):
+        receipients = other_nicks(parsed["channel"], server_name)
+        new_message = "crypt:%s:crypt" % encrypt(message, receipients)
+
+    # Private message
+    else:
+        new_message = "crypt:%s:crypt" % encrypt(message, [parsed["channel"]])
+
     # Encode the newlines, as they are not allowed by the IRC protocol
     new_message = new_message.replace("\n", "\\n", -1)
 
