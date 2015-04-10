@@ -47,7 +47,14 @@ def other_nicks(channel_name, server_name):
 
 
 # Encrypt a message for all possible recipients
-def encrypt(message, to_nicks):
+def encrypt(message, parsed):
+    # Set the correct to_nicks
+    to_nicks = []
+    if parsed["channel"].startswith("#"):
+        to_nicks = other_nicks(parsed["channel"], parsed["server"])
+    else:
+        to_nicks = [parsed["channel"]]
+
     # Assemble the command
     command = ["gpg2", "--armor", "--encrypt"]
     for nick in to_nicks:
@@ -58,11 +65,20 @@ def encrypt(message, to_nicks):
     if len(command) > 3:
         # Run the command and collect its output
         p = subprocess.Popen(command,
-                             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        encoded, _ = p.communicate(message.encode())
-        encoded = encoded.decode().strip()
-        return encoded
-    return ""
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+
+        encoded, err = p.communicate(message.encode())
+
+        if p.returncode == 0:
+            encoded = encoded.decode().strip()
+            return [encoded, True]
+
+        else:
+            err = err.decode().strip()
+            return [err, False]
+
+    return ["", False]
 
 
 # Decrypt a received message
@@ -70,18 +86,24 @@ def decrypt(message):
     p = subprocess.Popen(["gpg2", "--armor", "--decrypt"],
                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
-    decoded, _ = p.communicate(message.encode())
-    decoded = decoded.decode().strip()
-    return decoded
+
+    decoded, err = p.communicate(message.encode())
+
+    if p.returncode == 0:
+        decoded = decoded.decode().strip()
+        return [decoded, True]
+    else:
+        err = err.decode().strip()
+        return [err, False]
 
 
 # Parse an IRC message into a useable format
 def parse_message(irc_message, server=None):
     # parse the message
     message_dict = {"message": irc_message}
-    if server:
-        message_dict["server"] = server
     parsed = weechat.info_get_hashtable("irc_message_parse", message_dict)
+    if server:
+        parsed["server"] = server
     # remove the channel part from PRIVMSG arguments
     message = ":".join(parsed["arguments"].split(":")[1:])
     return(parsed, message)
@@ -130,7 +152,14 @@ def in_modifier(data, modifier, server_name, irc_message):
 
             del buffers[buffer_id]
 
-            return build_message(decrypt(message))
+            result, success = decrypt(message)
+            if success:
+                return build_message(result)
+
+            else:
+                for line in result.splitlines():
+                    weechat.prnt("", "Error: %s" % line)
+                return build_message("Error: Decryption failed.")
 
         # Don't print anything while buffering
         else:
@@ -156,32 +185,32 @@ def out_modifier(data, modifier, server_name, irc_message):
     if not encryption_target(parsed, server_name):
         return irc_message
 
-    new_message = ""
-    # Message sent over a channel
-    if parsed["channel"].startswith("#"):
-        receipients = other_nicks(parsed["channel"], server_name)
-        new_message = "crypt:%s:crypt" % encrypt(message, receipients)
+    # Try to encrypt the message
+    result, success = encrypt(message, parsed)
+    if not success:
+        # Print the error
+        for line in result.splitlines():
+            weechat.prnt("", "Error: %s" % line)
+            return ""
 
-    # Private message
     else:
-        new_message = "crypt:%s:crypt" % encrypt(message, [parsed["channel"]])
+        new_message = "crypt:%s:crypt" % result
+        # Encode the newlines, as they are not allowed by the IRC protocol
+        new_message = new_message.replace("\n", "\\n", -1)
 
-    # Encode the newlines, as they are not allowed by the IRC protocol
-    new_message = new_message.replace("\n", "\\n", -1)
+        # The message has to be split into multiple messages, as ASCII armors
+        # are longer than the longest legal IRC message
+        messages = []
 
-    # The message has to be split into multiple messages, as ASCII armors
-    # are longer than the longest legal IRC message
-    messages = []
+        chunks = len(new_message) / max_length
+        if len(new_message) % max_length != 0:
+            chunks += 1
 
-    chunks = len(new_message) / max_length
-    if len(new_message) % max_length != 0:
-        chunks += 1
+        for i in range(chunks):
+            chunk = new_message[max_length * i:max_length * (i + 1)]
+            messages.append(build_message(chunk))
 
-    for i in range(chunks):
-        chunk = new_message[max_length * i:max_length * (i + 1)]
-        messages.append(build_message(chunk))
-
-    return "\n".join(messages)
+        return "\n".join(messages)
 
 weechat.hook_modifier("irc_out_privmsg", "out_modifier", "")
 
