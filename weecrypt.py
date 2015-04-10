@@ -48,12 +48,15 @@ def encrypt(message, to_nicks):
         if nick in gpg_identifiers:
             command.extend(["--recipient", gpg_identifiers[nick]])
 
-    # Run the command and collect its output
-    p = subprocess.Popen(command,
-                         stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    encoded, _ = p.communicate(message.encode())
-    encoded = encoded.decode().strip()
-    return encoded
+    # Only encrypt if there are receipients
+    if len(command) > 3:
+        # Run the command and collect its output
+        p = subprocess.Popen(command,
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        encoded, _ = p.communicate(message.encode())
+        encoded = encoded.decode().strip()
+        return encoded
+    return ""
 
 
 # Decrypt a received message
