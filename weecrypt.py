@@ -56,7 +56,7 @@ def encrypt(message, parsed):
         to_nicks = [parsed["channel"]]
 
     # Assemble the command
-    command = ["gpg2", "--armor", "--encrypt"]
+    command = ["gpg2", "--armor", "--encrypt","--batch","--no-tty"]
     for nick in to_nicks:
         if nick in gpg_identifiers:
             command.extend(["--recipient", gpg_identifiers[nick]])
@@ -83,7 +83,7 @@ def encrypt(message, parsed):
 
 # Decrypt a received message
 def decrypt(message):
-    p = subprocess.Popen(["gpg2", "--armor", "--decrypt"],
+    p = subprocess.Popen(["gpg2", "--armor", "--decrypt","--batch","--no-tty"],
                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
 
