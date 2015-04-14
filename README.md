@@ -14,8 +14,10 @@ Table of contents
 ## Installation
 To install it, run these commands in your shell:
 ```bash
-git clone https://github.com/froozen/weecrypt.git
-ln -s weecrypt/weecrypt.py ~/.weechat/python/autostart/weecrypt.py
+git clone https://github.com/shak-mar/weecrypt.git
+mkdir -p ~/.weechat/python/autoload/
+cd ~/.weechat/python/autoload/
+ln -s ~/weecrypt/weecrypt.py weecrypt.py
 ```
 
 If your weechat is already running, you'll have reload your python plugins:
