@@ -9,6 +9,7 @@ Table of contents
 -----------------
 - [Installation](#installation)
 - [Setting it up](#setting-it-up)
+- [Messages that are not encrypted](#messages-that-are-not-encrypted)
 - [Known Issues](#known-issues)
 
 ## Installation
