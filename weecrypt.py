@@ -68,7 +68,7 @@ def encrypt(message, parsed):
                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
 
-        encoded, err = p.communicate(message.encode())
+        encoded, err = p.communicate(message)
 
         if p.returncode == 0:
             encoded = encoded.decode().strip()
@@ -87,10 +87,10 @@ def decrypt(message):
                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
 
-    decoded, err = p.communicate(message.encode())
+    decoded, err = p.communicate(message.encode("utf-8"))
 
     if p.returncode == 0:
-        decoded = decoded.decode().strip()
+        decoded = decoded.decode("utf-8").strip()
         return [decoded, True]
     else:
         err = err.decode().strip()
