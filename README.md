@@ -81,6 +81,16 @@ irc.freenode.#yourchannel = 0
 irc.freenode.yourfriend = 0
 ```
 
+## Messages that are not encrypted
+
+When you receive a message that is not encrypted in a whitelisted channel, it
+will be prefixed with `<unencrypted>: `. If you want to write an unencrypted
+message yourself, you can use the `/unencrypted` command.
+
+**Note:** Also, if you write a message that starts with `<unencrypted>: `, it
+will not be encrypted in order to avoid confusion between encrypted and raw
+messages.
+
 ## Known Issues
 ### There is a delay between you sending and your friends receiving the message
 This is because ASCII armored GPG messages are quite big and IRC commands are
