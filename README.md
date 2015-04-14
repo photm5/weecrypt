@@ -14,8 +14,10 @@ Table of contents
 ## Installation
 To install it, run these commands in your shell:
 ```bash
-git clone https://github.com/froozen/weecrypt.git
-ln -s weecrypt/weecrypt.py ~/.weechat/python/autostart/weecrypt.py
+git clone https://github.com/shak-mar/weecrypt.git
+mkdir -p ~/.weechat/python/autoload/
+cd ~/.weechat/python/autoload/
+ln -s ~/weecrypt/weecrypt.py weecrypt.py
 ```
 
 If your weechat is already running, you'll have reload your python plugins:
@@ -78,6 +80,16 @@ For example:
 irc.freenode.#yourchannel = 0
 irc.freenode.yourfriend = 0
 ```
+
+## Messages that are not encrypted
+
+When you receive a message that is not encrypted in a whitelisted channel, it
+will be prefixed with `<unencrypted>: `. If you want to write an unencrypted
+message yourself, you can use the `/unencrypted` command.
+
+**Note:** Also, if you write a message that starts with `<unencrypted>: `, it
+will not be encrypted in order to avoid confusion between encrypted and raw
+messages.
 
 ## Known Issues
 ### There is a delay between you sending and your friends receiving the message
