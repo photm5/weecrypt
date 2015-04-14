@@ -142,7 +142,7 @@ def in_modifier(data, modifier, server_name, irc_message):
         buffers[buffer_id] += message
 
         # Finished buffering: decrypt the message
-        if message.endswith(":crypt"):
+        if buffers[buffer_id].endswith(":crypt"):
 
             # Turn the message into the original ASCII armor
             split = buffers[buffer_id].split(":")
