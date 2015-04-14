@@ -62,7 +62,7 @@ def encrypt(message, parsed):
             command.extend(["--recipient", gpg_identifiers[nick]])
 
     # Only encrypt if there are receipients
-    if len(command) > 3:
+    if "--recipient" in command:
         # Run the command and collect its output
         p = subprocess.Popen(command,
                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
