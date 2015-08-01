@@ -45,6 +45,8 @@ def other_nicks(channel_name, server_name):
 
     return nicks
 
+bulk_begin = "-----BEGIN PGP MESSAGE-----\nVersion: GnuPG v2\n\n"
+bulk_end = "-----END PGP MESSAGE-----"
 
 # Encrypt a message for all possible recipients
 def encrypt(message, parsed):
@@ -72,6 +74,7 @@ def encrypt(message, parsed):
 
         if p.returncode == 0:
             encoded = encoded.decode().strip()
+            encoded = encoded[len(bulk_begin):][:-len(bulk_end)]
             return [encoded, True]
 
         else:
@@ -83,6 +86,7 @@ def encrypt(message, parsed):
 
 # Decrypt a received message
 def decrypt(message):
+    message = bulk_begin + message + bulk_end
     p = subprocess.Popen(["gpg2", "--armor", "--decrypt","--batch","--no-tty"],
                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
