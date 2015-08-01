@@ -92,6 +92,15 @@ message yourself, you can use the `/unencrypted` command.
 will not be encrypted in order to avoid confusion between encrypted and raw
 messages.
 
+## Decryption failure
+
+When you leave your computer running while you aren’t there, messages you
+receive won’t be decrypted correctly, because you aren’t there to enter your
+passphrase. In that case, the messages will be replaced with `Decryption failed,
+try /weecrypt_retry.`. As soon as you use the `/weecrypt_retry` command, you
+will be prompted for your passphrase by the gpg-agent again, and the decrypted
+message will be displayed to you in the server buffer.
+
 ## Known Issues
 ### There is a delay between you sending and your friends receiving the message
 This is because ASCII armored GPG messages are quite big and IRC commands are

@@ -13,6 +13,7 @@ gpg_identifiers = {}
 max_length = 300
 buffers = {}
 config_path = "~/.weecrypt.json"
+failed_messages = []
 
 # Load the configuration
 if path.isfile(path.expanduser(config_path)):
@@ -158,9 +159,11 @@ def in_modifier(data, modifier, server_name, irc_message):
                 return build_message(result)
 
             else:
+                failed_messages.append(
+                    (parsed["nick"], parsed["channel"], message))
                 for line in result.splitlines():
                     weechat.prnt("", "Error: %s" % line)
-                return build_message(message)
+                return build_message("Decryption failed, try /weecrypt_retry.")
 
         # Don't print anything while buffering
         else:
@@ -224,3 +227,22 @@ def unencrypted_cmd(data, buffer, args):
 weechat.hook_command("unencrypted", "sends an unencrypted message",
                      "<message>", "message: message to be sent",
                      "", "unencrypted_cmd", "")
+
+# Tries to decrypt failed messages
+def weecrypt_retry_cmd(data, buffer, args):
+    global failed_messages
+    for nick, chan, message in failed_messages:
+        result, success = decrypt(message)
+        if success:
+            if chan[0] == "#":
+                weechat.prnt("", "%s on %s: %s" % (nick, chan, result))
+            else:
+                weechat.prnt("", "%s: %s" % (nick, result))
+        else:
+            for line in result.splitlines():
+                weechat.prnt("", "Error: %s" % line)
+    failed_messages = []
+    return weechat.WEECHAT_RC_OK
+
+weechat.hook_command("weecrypt_retry", "retries to decrypt failed messages",
+                     "", "", "", "weecrypt_retry_cmd", "")
