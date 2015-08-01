@@ -100,7 +100,6 @@ def decrypt(message):
         err = err.decode().strip()
         return [err, False]
 
-
 # Parse an IRC message into a useable format
 def parse_message(irc_message, server=None):
     # parse the message
@@ -151,8 +150,6 @@ def in_modifier(data, modifier, server_name, irc_message):
             # Turn the message into the original ASCII armor
             split = buffers[buffer_id].split(":")
             message = ":".join(split[1:-1])
-            # Put the newlines back, as GPG needs them
-            message = message.replace("\\n", "\n", -1)
 
             del buffers[buffer_id]
 
@@ -199,8 +196,8 @@ def out_modifier(data, modifier, server_name, irc_message):
 
     else:
         new_message = "crypt:%s:crypt" % result
-        # Encode the newlines, as they are not allowed by the IRC protocol
-        new_message = new_message.replace("\n", "\\n", -1)
+        # Remove the newlines, as they are not allowed by the IRC protocol
+        new_message = new_message.replace("\n", "", -1)
 
         # The message has to be split into multiple messages, as ASCII armors
         # are longer than the longest legal IRC message
