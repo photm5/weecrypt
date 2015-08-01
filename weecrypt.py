@@ -159,7 +159,7 @@ def in_modifier(data, modifier, server_name, irc_message):
             else:
                 for line in result.splitlines():
                     weechat.prnt("", "Error: %s" % line)
-                return build_message("Error: Decryption failed.")
+                return build_message(message)
 
         # Don't print anything while buffering
         else:
