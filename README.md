@@ -111,3 +111,11 @@ communication speed, but you'll have to tolerate that in order to chat
 securely.
 
 [gpg_guide]: http://www.dewinter.com/gnupg_howto/english/GPGMiniHowto.html
+
+## License
+
+This is free software (as in freedom), using the permissive MIT (Expat)
+[license][]. This means you can use, read the source code of, change and
+redistribute weecrypt.
+
+[license]: https://github.com/shak-mar/weecrypt/blob/master/LICENSE
