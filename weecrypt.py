@@ -239,8 +239,9 @@ def weecrypt_retry_cmd(data, buffer, args):
             else:
                 weechat.prnt("", "%s: %s" % (nick, result))
         else:
+            weechat.prnt("", "/weecrypt_retry failed: %s" % message)
             for line in result.splitlines():
-                weechat.prnt("", "Error: %s" % line)
+                weechat.prnt("", "Retry error: %s" % line)
     failed_messages = []
     return weechat.WEECHAT_RC_OK
 
