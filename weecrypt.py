@@ -1,18 +1,18 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import weechat
 import subprocess
 from os import path
 import json
 
-weechat.register("weecrypt", "shak-mar", "0.1", "None",
+weechat.register("weecrypt", "shak-mar,jbauer", "0.1.1", "None",
                  "asymmetric encryption for weechat using gpg", "", "")
 
 channel_whitelist = []
 gpg_identifiers = {}
 max_length = 300
 buffers = {}
-config_path = "~/.weecrypt.json"
+config_path = "~/.config/weechat/weecrypt.json"
 failed_messages = []
 
 # Load the configuration
@@ -46,8 +46,8 @@ def other_nicks(channel_name, server_name):
 
     return nicks
 
-bulk_begin = "-----BEGIN PGP MESSAGE-----\nVersion: GnuPG v2\n\n"
-bulk_end = "-----END PGP MESSAGE-----"
+bulk_begin = "-----BEGIN PGP MESSAGE-----\n\n"
+bulk_end = "\n-----END PGP MESSAGE-----"
 
 # Encrypt a message for all possible recipients
 def encrypt(message, parsed):
@@ -71,7 +71,7 @@ def encrypt(message, parsed):
                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
 
-        encoded, err = p.communicate(message)
+        encoded, err = p.communicate(message.encode('utf-8'))
 
         if p.returncode == 0:
             encoded = encoded.decode().strip()
@@ -210,7 +210,7 @@ def out_modifier(data, modifier, server_name, irc_message):
         if len(new_message) % max_length != 0:
             chunks += 1
 
-        for i in range(chunks):
+        for i in range(int(chunks)):
             chunk = new_message[max_length * i:max_length * (i + 1)]
             messages.append(build_message(chunk))
 
